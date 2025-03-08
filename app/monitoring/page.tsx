@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from 'next/navigation';
 import { Bar, Line } from 'react-chartjs-2';
-import { Droplets, Download, ArrowLeft, ArrowRight, ArrowBigLeft, Sun, Moon } from 'lucide-react';
+import { Droplets, Download, ArrowBigLeft, Sun, Moon } from 'lucide-react';
 import supabase from "@/lib/supabase";
 
 import {
@@ -142,40 +142,45 @@ export default function MonitoringPage() {
           );
         })}
       </div>
+
+      {/* Tabel dengan Scroll */}
       <div className={`max-w-4xl mx-auto border rounded-lg shadow-lg p-6 mb-6 transition ${darkMode ? "bg-gray-900 border-yellow-400" : "bg-gray-200 border-gray-500"}`}>
         <h2 className={`text-xl font-semibold text-center mb-4 ${darkMode ? "text-yellow-400" : "text-yellow-700"}`}>Data Terbaru</h2>
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b">
-              <th className="p-2">ID</th>
-              <th className="p-2">Kelembapan (%)</th>
-              <th className="p-2">Curah Hujan (mm)</th>
-              <th className="p-2">Kedalaman Air (cm)</th>
-              <th className="p-2">Waktu</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((item) => (
-              <tr key={item.id} className="border-b">
-                <td className="p-2">{item.id}</td>
-                <td className="p-2">{item.kelembapan}</td>
-                <td className="p-2">{item.hujan}</td>
-                <td className="p-2">{item.kedalaman}</td>
-                <td className="p-2">{new Date(item.waktu).toLocaleString()}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b">
+                <th className="p-2">ID</th>
+                <th className="p-2">Kelembapan (%)</th>
+                <th className="p-2">Curah Hujan (mm)</th>
+                <th className="p-2">Kedalaman Air (cm)</th>
+                <th className="p-2">Waktu</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.map((item) => (
+                <tr key={item.id} className="border-b">
+                  <td className="p-2">{item.id}</td>
+                  <td className="p-2">{item.kelembapan}</td>
+                  <td className="p-2">{item.hujan}</td>
+                  <td className="p-2">{item.kedalaman}</td>
+                  <td className="p-2">{new Date(item.waktu).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+
       {/* Tombol Download */}
       <div className="flex justify-center mt-6 space-x-4">
         <button
-          className={`px-6 py-3 rounded-lg shadow-md transition flex items-center ${darkMode ? "bg-yellow-400 text-black hover:bg-yellow-500" : "bg-yellow-500 text-black hover:bg-yellow-600"}`}
+          className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-md transition flex items-center ${darkMode ? "bg-yellow-400 text-black hover:bg-yellow-500" : "bg-yellow-500 text-black hover:bg-yellow-600"}`}
         >
           <Download className="mr-2" size={20} /> Download 100 Data
         </button>
         <button
-          className={`px-6 py-3 rounded-lg shadow-md transition flex items-center ${darkMode ? "bg-green-500 text-black hover:bg-green-600" : "bg-green-600 text-white hover:bg-green-700"}`}
+          className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-md transition flex items-center ${darkMode ? "bg-green-500 text-black hover:bg-green-600" : "bg-green-600 text-white hover:bg-green-700"}`}
         >
           <Download className="mr-2" size={20} /> Download 200 Data
         </button>
