@@ -1,9 +1,11 @@
 'use client';
+
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from 'next/navigation';
 import { Bar, Line } from 'react-chartjs-2';
 import { Droplets, Download, ArrowBigLeft, Sun, Moon } from 'lucide-react';
 import supabase from "@/lib/supabase";
+import FileSaver from 'file-saver';  // Import FileSaver for downloading files
 
 import {
   Chart as ChartJS,
@@ -39,15 +41,15 @@ interface MonitoringData {
 export default function MonitoringPage() {
   const [data, setData] = useState<MonitoringData[]>([]);
   const [page, setPage] = useState(0);
-  const [darkMode, setDarkMode] = useState(true); // Mode default: Gelap
+  const [darkMode, setDarkMode] = useState(true);
   const router = useRouter();
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (limit: number) => {
     const { data: fetchedData, error } = await supabase
       .from("monitoring")
       .select("id, kelembapan, hujan, kedalaman, waktu")
       .order("id", { ascending: false })
-      .range(page * 10, page * 10 + 9);
+      .limit(limit);  // Fetching the last `limit` records
 
     if (error) {
       console.error("Error fetching data:", error);
@@ -55,19 +57,43 @@ export default function MonitoringPage() {
     }
 
     setData(fetchedData || []);
-  }, [page]);
+  }, []);
 
   useEffect(() => {
-    fetchData();
-    const intervalId = setInterval(fetchData, 5000);
+    fetchData(10);  // Default fetch 10 records
+    const intervalId = setInterval(() => fetchData(10), 5000);
     return () => clearInterval(intervalId);
   }, [fetchData]);
 
   const labels = data.map(item => new Date(item.waktu).toLocaleTimeString());
 
+  // Utility function to convert data to CSV
+  const convertToCSV = (data: MonitoringData[]): string => {
+    const header = ['ID', 'Kelembapan (%)', 'Curah Hujan (mm)', 'Kedalaman Air (cm)', 'Waktu'];
+    const rows = data.map(item => [
+      item.id,
+      item.kelembapan,
+      item.hujan,
+      item.kedalaman,
+      new Date(item.waktu).toLocaleString(),
+    ]);
+
+    const csvContent = [header, ...rows].map(e => e.join(",")).join("\n");
+    return csvContent;
+  };
+
+  // Function to trigger the CSV download
+  const downloadData = (limit: number) => {
+    fetchData(limit).then(() => {
+      const csvContent = convertToCSV(data);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      FileSaver.saveAs(blob, `data-monitoring-${limit}.csv`);  // Use FileSaver to download
+    });
+  };
+
   return (
-    <div className={`min-h-screen p-8 transition-colors duration-300 ${darkMode ? "bg-black text-white" : "bg-white text-black"}`}>
-      
+    <div className={`min-h-screen p-8 transition-colors duration-300 ${darkMode ? "bg-white text-black" : "bg-black text-white"}`}>
+
       {/* Tombol Mode Gelap/Terang */}
       <button
         className="absolute top-4 right-4 bg-gray-700 text-white p-2 rounded-full hover:bg-gray-600 transition"
@@ -175,11 +201,13 @@ export default function MonitoringPage() {
       {/* Tombol Download */}
       <div className="flex justify-center mt-6 space-x-4">
         <button
+          onClick={() => downloadData(100)}  // Trigger download for 100 records
           className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-md transition flex items-center ${darkMode ? "bg-yellow-400 text-black hover:bg-yellow-500" : "bg-yellow-500 text-black hover:bg-yellow-600"}`}
         >
           <Download className="mr-2" size={20} /> Download 100 Data
         </button>
         <button
+          onClick={() => downloadData(200)}  // Trigger download for 200 records
           className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-md transition flex items-center ${darkMode ? "bg-green-500 text-black hover:bg-green-600" : "bg-green-600 text-white hover:bg-green-700"}`}
         >
           <Download className="mr-2" size={20} /> Download 200 Data
